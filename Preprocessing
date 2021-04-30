@@ -1,0 +1,58 @@
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import os
+import cv2
+df = pd.read_csv('labels.csv')
+df.head()
+import xml.etree.ElementTree as xet
+filename = df['filepath'][0]
+filename
+def getFilename(filename):
+    filename_image = xet.parse(filename).getroot().find('filename').text
+    filepath_image = os.path.join('./images',filename_image)
+    return filepath_image
+getFilename(filename)
+image_path = list(df['filepath'].apply(getFilename))
+image_path
+file_path = image_path[0]
+file_path 
+img = cv2.imread(file_path)
+
+cv2.namedWindow('example',cv2.WINDOW_NORMAL)
+cv2.imshow('example',img)
+cv2.waitKey(0)
+cv2.destroyAllWindows() 
+
+cv2.rectangle(img,(1093,645),(1396,727),(0,255,0),3)
+cv2.namedWindow('example',cv2.WINDOW_NORMAL)
+cv2.imshow('example',img)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+from sklearn.model_selection import train_test_split
+from tensorflow.keras.preprocessing.image import load_img, img_to_array
+labels = df.iloc[:,1:].values
+data = []
+output = []
+for ind in range(len(image_path)):
+    image = image_path[ind]
+    img_arr = cv2.imread(image)
+    h,w,d = img_arr.shape
+    # prepprocesing
+    load_image = load_img(image,target_size=(224,224))
+    load_image_arr = img_to_array(load_image)
+    norm_load_image_arr = load_image_arr/255.0 # normalization
+    # normalization to labels
+    xmin,xmax,ymin,ymax = labels[ind]
+    nxmin,nxmax = xmin/w,xmax/w
+    nymin,nymax = ymin/h,ymax/h
+    label_norm = (nxmin,nxmax,nymin,nymax) # normalized output
+    # -------------- append
+    data.append(norm_load_image_arr)
+    output.append(label_norm)
+X = np.array(data,dtype=np.float32)
+y = np.array(output,dtype=np.float32)
+X.shape,y.shape
+x_train,x_test,y_train,y_test = train_test_split(X,y,train_size=0.8,random_state=0)
+x_train.shape,x_test.shape,y_train.shape,y_test.shape
